@@ -1,11 +1,11 @@
 <app-title title="Detalle del Usuario"></app-title>
 
-@if ( user() ) {
+@if ( userComputed() ) {
 
    <section>
-        <img [srcset]="user()?.avatar" [alt]="user()!.first_name">
+        <img [srcset]="userComputed()?.avatar" [alt]="userComputed()!.first_name">
 
-        <h3>{{ user()?.first_name }}</h3>
+        <h3>{{ userComputed()?.first_name }}</h3>
 
    </section> 
 

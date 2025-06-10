@@ -1,7 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { User, UserResponse, UsersResponse } from '../interfaces/reqres.interface';
-import { delay, map, Observable, Subscription, tap } from 'rxjs';
+import { catchError, delay, map, Observable, Subscription, tap, throwError } from 'rxjs';
+import { rxResource } from '@angular/core/rxjs-interop';
 
 const baseUrl = 'https://reqres.in/api';
 
@@ -16,76 +17,40 @@ interface State {
 })
 export class UsersService {
 
-
   private http = inject( HttpClient );
 
-  private state = signal<State>({
-    users: [],
-    loading: true,
-  });
-
-  public users = computed( () => {
-    return this.state().users;
-  });
-
-  public isLoading = computed( () => this.state().loading );
-
-
-  constructor() {
-
-    this.loadData();
-    console.log('Cargando datos')
-
-  }
-
-
-  public getUserById(id: number ): Observable<User>{
-
-     const url = `${baseUrl}/users/${id}`;
-
-     return this.http.get<UserResponse>( url,
-      {  
-        headers: {
-                 'x-api-key': 'reqres-free-v1' 
-                   }
-      })
-      .pipe(
-        delay( 2000 ),
-        tap( res => console.log('Estoy en el servicio: ', res)),
-        map( res => res.data)
-      )
-
-
-  }
-
-
-  private loadData(): void {
-
-    // x-api-key: reqres-free-v1
-
-    const url = `${baseUrl}/users`;
-
-    this.http.get<UsersResponse>( url , {  headers: {
-        'x-api-key': 'reqres-free-v1' }
-      }).pipe(
-        tap ( resp => {
-          console.log('Mostrando data.')
-        })
-      ).subscribe( res => {
-
-        this.state.set({
-          loading: false,
-          users: res.data,
-        });
+  public usersResource = rxResource({
+    stream: () => this.http.get<UsersResponse>(`${baseUrl}/users`, {
+      headers: {
+        "x-api-key": "reqres-free-v1"
       }
-    
-    );
+      }).pipe(
+        map((res: UsersResponse) => res.data),
+        catchError(err => {
+          console.error('Error fetching users:', err);
+          return throwError(() => new Error('Failed to load users. Please try again.'));
+        })
+      ),
+    defaultValue: [] as User[],
+  });
+  usersComputed = computed(() => this.usersResource.value() ?? [] as User[]);
 
-
-
-  }
-
-
-
+  public userResource = (idUser: number) => rxResource({
+    stream: () => this.http.get<UserResponse>(`${baseUrl}/users/${idUser}`, {
+      headers: {
+        "x-api-key": "reqres-free-v1"
+      }
+    }).pipe(
+      map((res: UserResponse) => res.data),
+      catchError(err => {
+        console.error('Error fetching user:', err);
+        return throwError(() => new Error('Failed to load user. Please try again.'));
+      })
+    ),
+    defaultValue: undefined,
+  });
+  public userComputed = (idUser: number) => computed(() => this.userResource(idUser).value() ?? undefined );
 
 }
+
+

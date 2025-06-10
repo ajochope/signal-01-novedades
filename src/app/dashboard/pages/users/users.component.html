@@ -3,7 +3,7 @@
 <app-title title="Listado de Usuarios"></app-title>
 
 <ul>
-    @for( user of userService.users(); track user.id ){
+    @for( user of usersComputed(); track user.id ){
     
         <li class="flex items-center my-2">
             <img [src]="user.avatar"
