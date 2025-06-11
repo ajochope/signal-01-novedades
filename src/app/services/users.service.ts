@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, httpResource } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { User, UserResponse, UsersResponse } from '../interfaces/reqres.interface';
 import { catchError, delay, map, Observable, Subscription, tap, throwError } from 'rxjs';
@@ -19,37 +19,61 @@ export class UsersService {
 
   private http = inject( HttpClient );
 
-  public usersResource = rxResource({
-    stream: () => this.http.get<UsersResponse>(`${baseUrl}/users`, {
-      headers: {
-        "x-api-key": "reqres-free-v1"
-      }
-      }).pipe(
-        map((res: UsersResponse) => res.data),
-        catchError(err => {
-          console.error('Error fetching users:', err);
-          return throwError(() => new Error('Failed to load users. Please try again.'));
-        })
-      ),
-    defaultValue: [] as User[],
-  });
-  usersComputed = computed(() => this.usersResource.value() ?? [] as User[]);
+  // public usersResource = rxResource({
+  //   stream: () => this.http.get<UsersResponse>(`${baseUrl}/users`, {
+  //     headers: {
+  //       "x-api-key": "reqres-free-v1"
+  //     }
+  //     }).pipe(
+  //       map((res: UsersResponse) => res.data),
+  //       catchError(err => {
+  //         console.error('Error fetching users:', err);
+  //         return throwError(() => new Error('Failed to load users. Please try again.'));
+  //       })
+  //     ),
+  //   defaultValue: [] as User[],
+  // });
 
-  public userResource = (idUser: number) => rxResource({
-    stream: () => this.http.get<UserResponse>(`${baseUrl}/users/${idUser}`, {
+  public usersResource = httpResource<UsersResponse>(
+    () => ({
+      url: `${baseUrl}/users`,
+      method: 'GET',
       headers: {
-        "x-api-key": "reqres-free-v1"
+        'x-api-key': 'reqres-free-v1'
       }
-    }).pipe(
-      map((res: UserResponse) => res.data),
-      catchError(err => {
-        console.error('Error fetching user:', err);
-        return throwError(() => new Error('Failed to load user. Please try again.'));
-      })
-    ),
-    defaultValue: undefined,
-  });
-  public userComputed = (idUser: number) => computed(() => this.userResource(idUser).value() ?? undefined );
+    })
+  );
+
+  usersComputed = computed(() => this.usersResource.value()?.data ?? [] as User[]);
+
+  // public userResource = (idUser: number) => rxResource({
+  //   stream: () => this.http.get<UserResponse>(`${baseUrl}/users/${idUser}`, {
+  //     headers: {
+  //       "x-api-key": "reqres-free-v1"
+  //     }
+  //   }).pipe(
+  //     map((res: UserResponse) => res.data),
+  //     catchError(err => {
+  //       console.error('Error fetching user:', err);
+  //       return throwError(() => new Error('Failed to load user. Please try again.'));
+  //     })
+  //   ),
+  //   defaultValue: undefined,
+  // });
+
+  //public userComputed = (idUser: number) => computed(() => this.userResource(idUser).value() ?? undefined );
+
+  public userResource = (idUser: number) => httpResource<UserResponse>(
+    () => {
+      return {
+        url: `${baseUrl}/users/${idUser}`,
+        method: 'GET',
+        headers: {
+          "x-api-key": "reqres-free-v1"
+        }
+      };
+    }
+  );
 
 }
 

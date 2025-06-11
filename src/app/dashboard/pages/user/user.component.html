@@ -3,10 +3,8 @@
 @if ( userComputed() ) {
 
    <section>
-        <img [srcset]="userComputed()?.avatar" [alt]="userComputed()!.first_name">
-
-        <h3>{{ userComputed()?.first_name }}</h3>
-
+    <img [src]="userComputed()?.avatar" [alt]="userComputed()?.first_name">
+    <h3>{{ userComputed()?.first_name }}</h3>
    </section> 
 
 }

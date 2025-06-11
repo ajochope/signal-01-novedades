@@ -21,5 +21,5 @@ export default class UserComponent {
   
   idUser = Number(this.route.snapshot.paramMap.get('id'));
   userResource = this.userService.userResource(this.idUser);
-  userComputed = computed(() => this.userResource.value());
+  userComputed = computed(() => this.userResource.value()?.data);
 }
